@@ -1,0 +1,118 @@
+/* NOTE: Popup 樣式 - 參考 POE 暗色系風格 */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 220px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1a1a;
+  color: #d4b896;
+}
+
+.container {
+  padding: 16px;
+}
+
+/* 標題區 */
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #3a3020;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c8a96e;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  font-size: 10px;
+  color: #7a6a50;
+  margin-top: 2px;
+}
+
+/* 語言選擇區 */
+.lang-section {
+  margin-bottom: 14px;
+}
+
+.lang-label {
+  font-size: 11px;
+  color: #7a6a50;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.lang-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: #252525;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  color: #b8a070;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+
+.lang-btn:hover:not(.disabled) {
+  background: #2e2a1e;
+  border-color: #c8a96e;
+}
+
+.lang-btn.active {
+  background: #2e2a1e;
+  border-color: #c8a96e;
+  color: #e8d0a0;
+}
+
+.lang-btn.active::before {
+  content: '✓ ';
+  color: #c8a96e;
+}
+
+.lang-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lang-sub {
+  font-size: 10px;
+  color: #5a5040;
+}
+
+.lang-btn.active .lang-sub {
+  color: #8a7050;
+}
+
+/* 頁尾 */
+.footer {
+  padding-top: 10px;
+  border-top: 1px solid #3a3020;
+  text-align: center;
+}
+
+.footer p {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a7a5a;
+  letter-spacing: 0.5px;
+}

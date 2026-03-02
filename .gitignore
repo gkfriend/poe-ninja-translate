@@ -1,0 +1,13 @@
+# 第三方原始字庫（大型檔案，可由 build 腳本重新下載）
+data/raw/items.ndjson
+data/raw/stats.ndjson
+
+# 建置輸出（已複製至 src/data/translation.json）
+data/dist/
+
+# Claude Code 專案設定
+.claude/
+
+# 系統檔案
+.DS_Store
+Thumbs.db

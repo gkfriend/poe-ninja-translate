@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POE Ninja 繁體中文化</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">POE Ninja 中文化</h1>
+      <p class="subtitle">Path of Exile 1</p>
+    </header>
+
+    <section class="lang-section">
+      <p class="lang-label">顯示語言</p>
+      <div class="lang-buttons">
+        <button class="lang-btn" data-lang="en" id="btn-en">
+          英文
+          <span class="lang-sub">English</span>
+        </button>
+        <button class="lang-btn" data-lang="zh-TW" id="btn-zh-TW">
+          繁體中文
+          <span class="lang-sub">Traditional</span>
+        </button>
+        <button class="lang-btn disabled" data-lang="zh-CN" id="btn-zh-CN" disabled title="即將推出">
+          簡體中文
+          <span class="lang-sub">敬請期待</span>
+        </button>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>v0.9.2</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
