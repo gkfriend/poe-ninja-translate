@@ -1,4 +1,4 @@
-# POE Ninja 繁體中文化
+# POE Ninja 中文化插件
 
 > 一個為 [poe.ninja](https://poe.ninja) 提供繁體中文翻譯的 Chrome / Edge 瀏覽器插件
 
@@ -14,20 +14,8 @@
 ## 字庫來源
 
 翻譯資料來自 **[SnosMe/awakened-poe-trade](https://github.com/SnosMe/awakened-poe-trade)**（cmn-Hant 資料夾）
-此字庫直接從 GGG 官方遊戲客戶端提取，為繁體中文最權威資料。
-
-額外天賦 / 寶石資料爬取自 [poedb.tw](https://poedb.tw/tw/)。
-
-| 類別 | 筆數 |
-|------|------|
-| 物品名稱 | 4,714 |
-| 詞綴 | 6,764 |
-| 天賦 / 輿圖天賦 / 寶石 | 2,221 |
-| UI 字串 | 77 |
 
 ## 安裝方式
-
-本插件尚未上架 Chrome Web Store，請使用**開發者模式手動安裝**：
 
 1. 下載本專案（Clone 或下載 ZIP）
 2. 開啟瀏覽器的擴充功能頁面
@@ -38,29 +26,7 @@
 5. 選擇本專案的 **`src/`** 資料夾
 6. 前往 [poe.ninja](https://poe.ninja) 並點擊插件圖示切換至繁體中文
 
-## 更新字庫
-
-若需要重新建置翻譯字庫（例如字庫來源有更新）：
-
-```bash
-# 1. 安裝依賴（Node.js 18+）
-# 確認已安裝 node
-
-# 2. 下載原始字庫（items.ndjson, stats.ndjson 等）
-#    從 awakened-poe-trade 的 cmn-Hant 資料夾下載至 data/raw/
-
-# 3. 選用：重新爬取 poedb.tw 天賦 / 寶石資料
-node data/fetch-poedb.js
-
-# 4. 重建翻譯字庫
-node data/build-translation.js
-
-# 5. 複製至插件目錄
-cp data/dist/translation.json src/data/translation.json
-```
-
 ## 專案結構
-
 ```
 poe-ninja-tranlate/
 ├── src/                        # 插件本體
@@ -82,7 +48,3 @@ poe-ninja-tranlate/
 - 本插件僅支援 **Path of Exile 一代（POE1）**
 - POE2 不在支援範圍內
 - 簡體中文功能預留按鈕，尚未實作
-
-## 授權
-
-本專案僅作個人學習與使用，翻譯資料版權歸屬原始來源。

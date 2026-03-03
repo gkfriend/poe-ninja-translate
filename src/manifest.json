@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "POE Ninja 繁體中文化",
-  "version": "1.0.0",
-  "description": "自動將 poe.ninja 網站內容翻譯為繁體中文（僅支援 Path of Exile 1）",
+  "version": "0.9.3",
+  "description": "Translate poe.ninja to Traditional Chinese. Covers items, skills, passives, currency and tooltips. (POE1 only)",
   "permissions": [
     "storage",
     "activeTab"
