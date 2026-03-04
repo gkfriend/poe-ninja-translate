@@ -1,6 +1,7 @@
 // NOTE: Service Worker - 載入字庫並回應 content script 的請求
 
 let cachedTranslation = null
+let cachedTranslationPoe2 = null
 
 // 依瀏覽器語言判斷預設語言
 function detectLanguage() {
@@ -16,8 +17,17 @@ async function loadTranslation() {
   const url = chrome.runtime.getURL('data/translation.json')
   const res = await fetch(url)
   cachedTranslation = await res.json()
-  console.log('[POE翻譯] 字庫載入完成')
+  console.log('[POE翻譯] POE1 字庫載入完成')
   return cachedTranslation
+}
+
+async function loadTranslationPoe2() {
+  if (cachedTranslationPoe2) return cachedTranslationPoe2
+  const url = chrome.runtime.getURL('data/translation-poe2.json')
+  const res = await fetch(url)
+  cachedTranslationPoe2 = await res.json()
+  console.log('[POE翻譯] POE2 字庫載入完成')
+  return cachedTranslationPoe2
 }
 
 // 回應 content script 的字庫請求
@@ -27,6 +37,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .then(data => sendResponse({ ok: true, data }))
       .catch(err => sendResponse({ ok: false, error: err.message }))
     return true // NOTE: 必須 return true 才能非同步 sendResponse
+  }
+  if (msg.type === 'GET_TRANSLATION_POE2') {
+    loadTranslationPoe2()
+      .then(data => sendResponse({ ok: true, data }))
+      .catch(err => sendResponse({ ok: false, error: err.message }))
+    return true
   }
 })
 
@@ -40,4 +56,5 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
   // 預先載入字庫，減少第一次翻譯的延遲
   loadTranslation().catch(() => {})
+  loadTranslationPoe2().catch(() => {})
 })

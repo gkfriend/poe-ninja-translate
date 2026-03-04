@@ -4,9 +4,11 @@ const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', '
 
 let itemMap = null
 let normalizedStatMap = null
-let passiveMap = null   // NOTE: 天賦/輿圖天賦/昇華職業（來源：poedb.tw，雙語顯示）
+let passiveMap = null   // NOTE: 天賦/輿圖天賦/昇華職業（來源：poedb.tw 或 poe2db.tw，雙語顯示）
 let baseTypeSet = null  // NOTE: 設備基底類型（namespace=ITEM+craftable），用於隱藏傳奇物品副標題
 let currentLang = 'en'
+// NOTE: 依 URL 前綴判斷當前遊戲版本（/poe2/ → POE2，其餘 → POE1）
+var currentGame = window.location.pathname.startsWith('/poe2/') ? 'poe2' : 'poe1'
 let observer = null
 // NOTE: 防止同一容器在同一微任務批次中重複翻譯（每次 hover 清除後可重新翻）
 var pendingTippySet = new WeakSet()
@@ -150,6 +152,26 @@ const NAV_MAP = new Map([
   ['ITEMS', '裝備'], ['Main Skills', '主技能'],
   ['Active Skills', '主動技能'], ['Support Gems', '輔助寶石'],
   ['Active Skill', '主動技能'],
+  // NOTE: POE2 專有導覽詞
+  ['Waystones', '換界石'], ['Waystone', '換界石'],
+  ['Runes', '符文'], ['Rune', '符文'],
+  ['Soul Cores', '靈魂核心'], ['Soul Core', '靈魂核心'],
+  ['Tablets', '石板'], ['Tablet', '石板'],
+  ['Precursor Tablets', '前驅石板'],
+  ['Breach Splinters', '裂痕碎片'], ['Ritual Vessels', '儀式容器'],
+  ['Ultimatum Tributes', '最後通牒貢品'],
+  ['Disenchantment', '解除魔咒'],
+  ['Pinnacle Keys', '頂峰鑰匙'],
+  // NOTE: POE2 職業
+  ['Warrior', '戰士'], ['Ranger', '遊俠'], ['Witch', '巫師'],
+  ['Sorceress', '女術士'], ['Monk', '武僧'], ['Mercenary', '傭兵'],
+  // NOTE: POE2 昇華職業
+  ['Warbringer', '戰爭使者'], ['Titan', '泰坦'],
+  ['Deadeye', '銳眼'], ['Pathfinder', '追獵者'],
+  ['Infernalist', '獄火師'], ['Blood Mage', '血魔'],
+  ['Stormweaver', '風暴編織者'], ['Chronomancer', '時間術士'],
+  ['Invoker', '祈咒師'], ['Acolyte of Chayula', '卡尤拉信徒'],
+  ['Witchhunter', '獵巫者'], ['Gemling Legionnaire', '寶石兵團'],
 ])
 
 // ── 通貨/物品描述文字對照（字庫中無收錄的固定描述句）────────
@@ -337,15 +359,18 @@ function injectStyles() {
 async function loadDictionary() {
   if (itemMap) return
 
+  // NOTE: 依當前遊戲版本請求對應字庫
+  var msgType = currentGame === 'poe2' ? 'GET_TRANSLATION_POE2' : 'GET_TRANSLATION'
+
   // NOTE: 避免 ?. ?? 在舊版 Edge content script 引擎報錯，改用明確判斷
   var response = null
   try {
-    response = await chrome.runtime.sendMessage({ type: 'GET_TRANSLATION' })
+    response = await chrome.runtime.sendMessage({ type: msgType })
   } catch (e) {
     // service worker 可能在休眠，等待後重試一次
     await new Promise(function(r) { setTimeout(r, 500) })
     try {
-      response = await chrome.runtime.sendMessage({ type: 'GET_TRANSLATION' })
+      response = await chrome.runtime.sendMessage({ type: msgType })
     } catch (e2) {
       console.error('[POE翻譯] 無法連線至 background：', e2.message)
       return
@@ -357,11 +382,11 @@ async function loadDictionary() {
     return
   }
 
-  itemMap = new Map(Object.entries(response.data.items))
-  normalizedStatMap = new Map(Object.entries(response.data.stats))
+  itemMap = new Map(Object.entries(response.data.items || {}))
+  normalizedStatMap = new Map(Object.entries(response.data.stats || {}))
   passiveMap = new Map(Object.entries(response.data.passives || {}))
   baseTypeSet = new Set(response.data.baseTypes || [])
-  console.log('[POE翻譯] 字庫就緒：物品 ' + itemMap.size + ' 筆，詞綴 ' + normalizedStatMap.size + ' 筆，天賦 ' + passiveMap.size + ' 筆，基底類型 ' + baseTypeSet.size + ' 筆')
+  console.log('[POE翻譯] ' + (currentGame === 'poe2' ? 'POE2' : 'POE1') + ' 字庫就緒：物品 ' + itemMap.size + ' 筆，詞綴 ' + normalizedStatMap.size + ' 筆，天賦 ' + passiveMap.size + ' 筆')
 }
 
 // ── 正規化空白 ────────────────────────────────────────────
@@ -752,7 +777,25 @@ function startObserver() {
 
 // ── SPA 路由變化監聽（React pushState / popstate）────────
 function onRouteChange() {
-  if (currentLang !== 'zh-TW' || !itemMap) return
+  if (currentLang !== 'zh-TW') return
+
+  // NOTE: 偵測是否在 POE1/POE2 之間切換，若有切換則重置字庫並重新載入
+  var newGame = window.location.pathname.startsWith('/poe2/') ? 'poe2' : 'poe1'
+  if (newGame !== currentGame) {
+    currentGame = newGame
+    itemMap = null
+    normalizedStatMap = null
+    passiveMap = null
+    baseTypeSet = null
+    console.log('[POE翻譯] 切換至 ' + (currentGame === 'poe2' ? 'POE2' : 'POE1') + '，重新載入字庫')
+  }
+
+  if (!itemMap) {
+    // 字庫尚未載入（含剛切換版本），重新啟動
+    enableZhTW()
+    return
+  }
+
   // NOTE: poe.ninja 為 React SPA，路由切換後 DOM 重新渲染，需延遲重新翻譯
   //   多次掃描涵蓋不同渲染時間點：
   //   300ms  → React 初始渲染完成
