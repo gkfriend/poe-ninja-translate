@@ -17,14 +17,22 @@
 
 ## 安裝方式
 
-1. 下載本專案（Clone 或下載 ZIP）
-2. 開啟瀏覽器的擴充功能頁面
+### 方法一：下載 Release（推薦）
+
+1. 前往 [Releases](../../releases) 下載最新版 `.zip`
+2. 解壓縮至任意資料夾
+3. 開啟瀏覽器的擴充功能頁面
    - Chrome：`chrome://extensions/`
    - Edge：`edge://extensions/`
-3. 開啟右上角 **「開發人員模式」**
-4. 點擊 **「載入未封裝項目」**（Load unpacked）
-5. 選擇本專案的 **`src/`** 資料夾
-6. 前往 [poe.ninja](https://poe.ninja) 並點擊插件圖示切換至繁體中文
+4. 開啟右上角 **「開發人員模式」**
+5. 點擊 **「載入未封裝項目」**（Load unpacked）
+6. 選擇解壓縮後的資料夾
+7. 前往 [poe.ninja](https://poe.ninja) 並點擊插件圖示切換至繁體中文
+
+### 方法二：從原始碼安裝
+
+1. Clone 或下載本專案
+2. 重複上方步驟 3–7，選擇 **`src/`** 資料夾
 
 ## 專案結構
 ```
@@ -36,11 +44,8 @@ poe-ninja-tranlate/
 │   ├── popup.html / .css / .js # 語言切換 UI
 │   ├── icons/                  # 插件圖示
 │   └── data/
-│       └── translation.json    # 翻譯字庫（1.1MB）
-└── data/                       # 字庫建置工具
-    ├── build-translation.js    # 合併字庫腳本
-    ├── fetch-poedb.js          # poedb.tw 爬蟲
-    └── raw/                    # 原始資料（部分不納入版本控制）
+│       └── translation.json    # 翻譯字庫
+└── releases/                   # 打包好的 Release 壓縮檔
 ```
 
 ## 注意事項
