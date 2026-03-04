@@ -39,8 +39,18 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true // NOTE: 必須 return true 才能非同步 sendResponse
   }
   if (msg.type === 'GET_TRANSLATION_POE2') {
-    loadTranslationPoe2()
-      .then(data => sendResponse({ ok: true, data }))
+    // NOTE: POE2 字庫 = POE1 items/stats（通貨/物品名稱大量重疊）+ POE2 passives（技能/天賦/職業）
+    //   先載入兩個字庫，再合併：POE2 passives 覆蓋 POE1 同名條目
+    Promise.all([loadTranslation(), loadTranslationPoe2()])
+      .then(([poe1, poe2]) => {
+        const merged = {
+          items: Object.assign({}, poe1.items, poe2.items),
+          stats: Object.assign({}, poe1.stats, poe2.stats),
+          passives: Object.assign({}, poe1.passives, poe2.passives),
+          baseTypes: poe2.baseTypes && poe2.baseTypes.length ? poe2.baseTypes : poe1.baseTypes,
+        }
+        sendResponse({ ok: true, data: merged })
+      })
       .catch(err => sendResponse({ ok: false, error: err.message }))
     return true
   }
