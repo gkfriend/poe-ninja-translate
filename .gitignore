@@ -1,0 +1,26 @@
+# ========== 插件本體以外的內容（不上傳） ==========
+
+# 專案管理文件
+CLAUDE.md
+
+# 字庫建置工具與原始資料（本地開發用，非插件本體）
+data/
+
+# Firefox 版本（另行維護，不公開於此 repo）
+firefox-version/
+
+# 素材檔案
+poe_logo.png
+
+# 根目錄暫存 zip（非正式 Release）
+/*.zip
+
+# ========== 系統檔案 ==========
+.claude/
+.DS_Store
+Thumbs.db
+node_modules/
+
+# ========== Release 資料夾例外：允許追蹤 ==========
+!releases/
+!releases/*.zip

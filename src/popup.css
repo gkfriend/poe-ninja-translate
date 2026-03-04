@@ -1,0 +1,169 @@
+/* NOTE: Popup 樣式 - POE 暗色系風格 */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 240px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1a1a;
+  color: #d4b896;
+}
+
+.container {
+  padding: 14px 16px;
+}
+
+/* 標題區 */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #342c1e;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c8a96e;
+  letter-spacing: 0.3px;
+}
+
+.subtitle {
+  font-size: 10px;
+  color: #6a5c44;
+  letter-spacing: 0.3px;
+}
+
+/* 語言選擇區 */
+.lang-section {
+  margin-bottom: 12px;
+}
+
+.lang-label {
+  font-size: 10px;
+  color: #6a5c44;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lang-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: #222222;
+  border: 1px solid #322a1e;
+  border-radius: 5px;
+  color: #a89060;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  text-align: left;
+}
+
+.lang-btn:hover:not(.disabled) {
+  background: #2a2618;
+  border-color: #8a7050;
+}
+
+.lang-btn.active {
+  background: #272210;
+  border-color: #5a4a2a;
+  box-shadow: inset 3px 0 0 #c8a96e;
+  color: #e8d0a0;
+}
+
+.lang-btn.active::before {
+  content: '✓ ';
+  color: #c8a96e;
+}
+
+.lang-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lang-sub {
+  font-size: 10px;
+  color: #504030;
+}
+
+.lang-btn.active .lang-sub {
+  color: #7a6040;
+}
+
+/* Ko-fi 按鈕 */
+.kofi-btn {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #2e2410 0%, #1e1a0e 100%);
+  border: 1px solid #7a5c28;
+  border-radius: 5px;
+  color: #e0b86a;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 8px rgba(180, 130, 40, 0.15), inset 0 1px 0 rgba(255,210,100,0.06);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.kofi-btn:hover {
+  background: linear-gradient(135deg, #3a2e14 0%, #272010 100%);
+  border-color: #c8a030;
+  color: #f5d080;
+  box-shadow: 0 0 14px rgba(200, 160, 48, 0.3), inset 0 1px 0 rgba(255,210,100,0.1);
+}
+
+/* 頁尾 */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #2e2418;
+}
+
+.footer-author {
+  font-size: 11px;
+  color: #6a5c44;
+  letter-spacing: 0.3px;
+}
+
+.footer-ver {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a7a5a;
+  letter-spacing: 0.5px;
+}
