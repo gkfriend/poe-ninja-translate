@@ -17,7 +17,7 @@ var pendingTippySet = new WeakSet()
 const NAV_MAP = new Map([
   ['Currency', '通貨'], ['Currency & Splinters', '通貨與碎片'],
   ['Fragments', '碎片'], ['Scarabs', '聖甲蟲'], ['Oils', '油瓶'],
-  ['Incubators', '孵化器'], ['Resonators', '共振器'],
+  ['Incubators', '培育器'], ['Resonators', '共振器'],
   ['Essences', '精華'], ['Fossils', '化石'],
   ['Maps', '地圖'], ['Blighted Maps', '凋落地圖'],
   ['Blight-ravaged Maps', '凋落蔓延地圖'], ['Unique Maps', '傳奇地圖'],
@@ -60,6 +60,13 @@ const NAV_MAP = new Map([
   ['Runegrafts', '符文之結'],
   ['Allflame Embers', '不滅之火餘燼'],
   ['Skill Gems', '技能寶石'],
+  ['Shrine Belts', '神殿腰帶'],
+  // NOTE: 神殿增益短名稱（用於 ShrineBelt 分類頁的組合標籤，如 "Acceleration, Massive"）
+  ['Acceleration', '迅速'], ['Brutal', '猛擊'], ['Diamond', '鑽石'],
+  ['Echoing', '迴響'], ['Gloom', '漆黑'], ['Greater Freezing', '高階霜寒'],
+  ['Greater Shocking', '高階雷霆'], ['Greater Skeletal', '高階骷髏'],
+  ['Impenetrable', '無畏'], ['Massive', '威猛'], ['Replenishing', '回復'],
+  ['Resistance', '抗性'], ['Resonating', '回響'],
   // NOTE: poe.ninja 分類詞（NAV_MAP 原缺漏）
   ['Unique Tinctures', '傳奇萃取物'],
   ['Tinctures', '萃取物'],
@@ -92,7 +99,7 @@ const NAV_MAP = new Map([
   ['Essence', '精華'],
   ['Fossil', '化石'],
   ['Resonator', '共振器'],
-  ['Incubator', '孵化器'],
+  ['Incubator', '培育器'],
   ['Catalyst', '催化劑'],
   ['Oil', '油'],
   ['Prophecy', '預言'],
@@ -206,7 +213,7 @@ const ITEM_DESC_MAP = new Map([
   ['Adds quality that enhances Life and Mana modifiers on an item.', '增加可強化物品生命和魔力詞綴的品質。'],
   ['Adds quality that enhances Speed modifiers on an item.', '增加可強化物品速度詞綴的品質。'],
   ['Adds quality that enhances Resistance modifiers on an item.', '增加可強化物品抗性詞綴的品質。'],
-  ['Upgrades a normal item to a magic item with an Incubated Item.', '將普通物品升級為魔法物品並附帶孵化物品。'],
+  ['Upgrades a normal item to a magic item with an Incubated Item.', '將普通物品升級為魔法物品並附帶培育物品。'],
   ['Divination cards can be traded for the items they depict at the Act 3 Altar.', '命運卡可在第3幕的祭壇上兌換成其描述的物品。'],
   ['Reforges a corrupted magic or rare item with new random modifiers.', '重新隨機生成一個已汙染魔法或稀有物品的詞綴。'],
   ['Adds an Abyssal Socket to an item with no Abyssal Sockets.', '為沒有深淵插槽的物品增加一個深淵插槽。'],
@@ -347,9 +354,26 @@ function injectStyles() {
     '  vertical-align: middle;',
     '  font-weight: normal;',
     '}',
-    // 雙語道具名稱的中文部分
     '.pnt-zh-name {',
     '  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;',
+    '}',
+    '.pnt-allocates-btn {',
+    '  position: absolute;',
+    '  background: #af6025;',
+    '  color: #f5e6c8;',
+    '  border: 1px solid #c8862a;',
+    '  padding: 5px 12px;',
+    '  border-radius: 4px;',
+    '  cursor: pointer;',
+    '  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;',
+    '  font-size: 14px;',
+    '  font-weight: bold;',
+    '  white-space: nowrap;',
+    '  z-index: 9999;',
+    '  pointer-events: auto;',
+    '}',
+    '.pnt-allocates-btn:hover {',
+    '  opacity: 0.85;',
     '}',
   ].join('\n')
   document.head.appendChild(style)
@@ -391,7 +415,7 @@ async function loadDictionary() {
 
 // ── 正規化空白 ────────────────────────────────────────────
 function normalizeSpaces(text) {
-  return text.replace(/[\u00a0\u202f\u2009\u200b\t]/g, ' ').trim()
+  return text.replace(/[\u00a0\u202f\u2009\u200b\t\n\r]/g, ' ').replace(/  +/g, ' ').trim()
 }
 
 // ── 詞綴查詢（將數字替換為 # 後查 Map，O(1)）────────────
@@ -514,6 +538,18 @@ function translateNode(node) {
   var nav = NAV_MAP.get(trimmed)
   if (nav) { node.nodeValue = raw.replace(trimmed, nav); return }
 
+  // NOTE: 逗號分隔的神殿名稱組合（如 "Acceleration, Massive" → "迅速, 威猛"）
+  //   poe.ninja ShrineBelt 分類頁以此格式顯示腰帶的神殿增益組合
+  if (trimmed.indexOf(', ') !== -1) {
+    var parts = trimmed.split(', ')
+    var allFound = parts.every(function(p) { return NAV_MAP.has(p) })
+    if (allFound) {
+      var joined = parts.map(function(p) { return NAV_MAP.get(p) }).join(', ')
+      node.nodeValue = raw.replace(trimmed, joined)
+      return
+    }
+  }
+
   var stat = translateStat(trimmed)
   if (stat) { node.nodeValue = raw.replace(trimmed, stat) }
 }
@@ -557,12 +593,21 @@ function translateSubtree(root) {
 
 // Tooltip 雙語翻譯：以 innerText 翻譯詞綴容器，在前方插入中文行
 function translateTippyTooltip(container) {
-  // 每次翻譯前清除舊中文行並重置翻譯標記（支持 Tippy 重用容器顯示不同裝備）
   var oldLines = container.querySelectorAll('.pnt-zh')
   for (var k = 0; k < oldLines.length; k++) oldLines[k].remove()
-  // NOTE: 清除 pnt-done 標記，允許下次 hover 重新翻譯同一容器的不同道具
   var donedEls = container.querySelectorAll('[data-pnt-done]')
   for (var m = 0; m < donedEls.length; m++) delete donedEls[m].dataset.pntDone
+
+  var allocatesNames = []
+  var allocWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null)
+  var allocTn
+  while ((allocTn = allocWalker.nextNode())) {
+    var allocVal = normalizeSpaces(allocTn.nodeValue || '')
+    if (allocVal.startsWith('Allocates ')) {
+      var allocName = allocVal.slice(10)
+      if (allocName && allocatesNames.indexOf(allocName) === -1) allocatesNames.push(allocName)
+    }
+  }
 
   // NOTE: 去重 Set：確保同一文字在整個 tooltip 中只翻譯一次
   //   解決三種重複來源：
@@ -624,6 +669,30 @@ function translateTippyTooltip(container) {
       if (el.dataset.pntDone) seenTexts.add(text)
     }
   }
+
+  if (allocatesNames.length > 0) {
+    var tooltipText = container.innerText || container.textContent || ''
+    var allocItemClass = ''
+    if (/\bAmulet\b/.test(tooltipText)) allocItemClass = 'amulet'
+    else if (/\bBelt\b/.test(tooltipText)) allocItemClass = 'belt'
+    if (allocItemClass) {
+      var allocRef = (container._tippy && container._tippy.reference) || null
+      if (!allocRef && container.id) {
+        allocRef = document.querySelector('[aria-describedby="' + container.id + '"]')
+      }
+      if (!allocRef) {
+        var hoveredEls = document.querySelectorAll(':hover')
+        for (var hi = hoveredEls.length - 1; hi >= 0; hi--) {
+          var hel = hoveredEls[hi]
+          if (!container.contains(hel) && hel.tagName !== 'HTML' && hel.tagName !== 'BODY') {
+            allocRef = hel
+            break
+          }
+        }
+      }
+      if (allocRef) injectAllocatesButton(allocRef, allocatesNames)
+    }
+  }
 }
 
 // 以元素的完整 innerText 查詞典，翻譯成功則在前方插入 .pnt-zh 中文行（中英中英排列）
@@ -637,6 +706,10 @@ function translateModElement(el) {
 
   // 依序嘗試：stat 詞綴 → 物品名稱 → Foulborn 前綴 → Builds 篩選詞 → poedb 天賦 → 導覽詞 → 物品描述
   var translated = translateStat(text)
+  if (!translated) {
+    var stripped = text.replace(/^[^\w\d(+\-#]+\s*/, '')
+    if (stripped && stripped !== text) translated = translateStat(stripped)
+  }
   if (!translated) translated = (itemMap && itemMap.get(text)) || null
   // NOTE: Foulborn 前綴處理（tooltip 版本，同 translateNode 邏輯）
   if (!translated && text.startsWith('Foulborn ')) {
@@ -665,6 +738,15 @@ function translateModElement(el) {
       }
     })
     translated = navResult
+  }
+
+  // NOTE: 逗號分隔的神殿名稱組合（tooltip 版本，同 translateNode 邏輯）
+  if (!translated && text.indexOf(', ') !== -1) {
+    var tParts = text.split(', ')
+    var tAllFound = tParts.every(function(p) { return NAV_MAP.has(p) })
+    if (tAllFound) {
+      translated = tParts.map(function(p) { return NAV_MAP.get(p) }).join(', ')
+    }
   }
 
   if (translated && translated !== text) {
@@ -777,6 +859,11 @@ function startObserver() {
 
 // ── SPA 路由變化監聽（React pushState / popstate）────────
 function onRouteChange() {
+  var existingBtn = document.getElementById('pnt-pob-btn')
+  if (existingBtn && !isCharacterBuildPage()) existingBtn.remove()
+  var allocBtns = document.querySelectorAll('.pnt-allocates-btn')
+  for (var ai = 0; ai < allocBtns.length; ai++) allocBtns[ai].remove()
+  schedulePobButtonInjection()
   if (currentLang !== 'zh-TW') return
 
   // NOTE: 偵測是否在 POE1/POE2 之間切換，若有切換則重置字庫並重新載入
@@ -825,10 +912,7 @@ async function enableZhTW() {
   injectStyles()
   startObserver()
   setupRouteListener()
-  // NOTE: 立即翻譯已可見的靜態內容（MutationObserver 負責捕捉後續動態載入的內容）
-  //   原本的 500ms 固定延遲會導致 SPA 換頁後內容未被翻譯；無窮迴圈已由三層 guard 解決。
   translateSubtree(document.body)
-  // NOTE: 備份掃描：部分頁面資料在首次掃描後才 render（如非同步 API 回應）
   setTimeout(function() { translateSubtree(document.body) }, 800)
 }
 
@@ -847,11 +931,156 @@ chrome.runtime.onMessage.addListener(function(msg) {
   else disableTranslation()
 })
 
+// ── 配置天賦 poedb 連結按鈕 ─────────────────────────────────
+
+var ALLOC_BTN_OFFSETS = [0, 32, 64, 96, 128]
+
+function injectAllocatesButton(refEl, passiveNames) {
+  if (!refEl || !passiveNames.length) return
+
+  var slotEl = refEl
+  var cur = refEl
+  while (cur && cur !== document.body) {
+    var cr = cur.getBoundingClientRect()
+    if (cr.width >= 40 && cr.height >= 40) { slotEl = cur; break }
+    cur = cur.parentElement
+  }
+  var slotRect = slotEl.getBoundingClientRect()
+  var eqContainer = slotEl
+  var widestW = slotRect.width
+  cur = slotEl.parentElement
+  while (cur && cur !== document.body) {
+    var r = cur.getBoundingClientRect()
+    if (r.width >= slotRect.width * 4) { eqContainer = cur; break }
+    if (r.width > widestW) { widestW = r.width; eqContainer = cur }
+    cur = cur.parentElement
+  }
+  var eqRect = eqContainer.getBoundingClientRect()
+  var anchorLeft = eqRect.right + window.pageXOffset - 130
+  var anchorTop = eqRect.top + window.pageYOffset + eqRect.height * 0.72
+
+  var existing = document.querySelectorAll('.pnt-allocates-btn')
+  var usedSlots = []
+  var usedNames = []
+  for (var xi = 0; xi < existing.length; xi++) {
+    usedSlots.push(parseInt(existing[xi].dataset.allocSlot, 10))
+    usedNames.push(existing[xi].dataset.allocName)
+  }
+
+  var slotIdx = 0
+  for (var i = 0; i < passiveNames.length; i++) {
+    var name = passiveNames[i]
+    if (usedNames.indexOf(name) !== -1) continue
+    while (slotIdx < ALLOC_BTN_OFFSETS.length && usedSlots.indexOf(slotIdx) !== -1) slotIdx++
+    if (slotIdx >= ALLOC_BTN_OFFSETS.length) break
+    ;(function(si, n) {
+      var zhName = (passiveMap && passiveMap.get(n)) || BUILD_FILTER_MAP.get(n) || n
+      var btn = document.createElement('button')
+      btn.className = 'pnt-allocates-btn'
+      btn.dataset.allocSlot = si
+      btn.dataset.allocName = n
+      btn.title = 'Allocates ' + n
+      btn.textContent = zhName
+      btn.style.left = anchorLeft + 'px'
+      btn.style.top = (anchorTop + ALLOC_BTN_OFFSETS[si]) + 'px'
+      btn.addEventListener('click', function(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        window.open('https://poedb.tw/tw/' + n.replace(/ /g, '_'), '_blank', 'noopener,noreferrer')
+      })
+      document.body.appendChild(btn)
+    })(slotIdx, name)
+    usedSlots.push(slotIdx)
+    usedNames.push(name)
+    slotIdx++
+  }
+}
+
+
+// ── 角色頁面 POB 按鈕 ──────────────────────────────────────
+var POB_LINK_SEL = 'a[href^="pob2://"], a[href^="pob://"], a[href^="https://pobb.in/"]'
+var pobLinkObserver = null
+
+function isCharacterBuildPage() {
+  var path = window.location.pathname
+  return (path.includes('/builds/') && path.includes('/character/')) ||
+         (path.includes('/profile/') && path.includes('/character/'))
+}
+
+function extractPobCode() {
+  var input = document.querySelector('input[readonly][value]')
+  if (input && input.value) return input.value
+
+  var links = document.querySelectorAll(POB_LINK_SEL)
+  for (var i = 0; i < links.length; i++) {
+    var href = links[i].getAttribute('href')
+    if (href.startsWith('pob://') || href.startsWith('pob2://')) {
+      var parent = links[i].parentElement
+      if (parent) {
+        var inp = parent.querySelector('input[readonly]')
+        if (inp && inp.value) return inp.value
+      }
+    }
+    if (href.startsWith('https://pobb.in/')) {
+      var m = href.match(/https:\/\/pobb\.in\/([^/?]+)/)
+      if (m) return m[1]
+    }
+  }
+  return null
+}
+
+function injectPobButton() {
+  if (document.getElementById('pnt-pob-btn')) return true
+  var importLink = document.querySelector(POB_LINK_SEL)
+  if (!importLink) return false
+  var container = importLink.parentElement
+  if (!container) return false
+
+  var btn = document.createElement('button')
+  btn.id = 'pnt-pob-btn'
+  btn.textContent = '編年史POB'
+  btn.style.cssText = 'background:#af6025;color:#f5e6c8;border:1px solid #c8862a;padding:5px 12px;border-radius:4px;cursor:pointer;font-family:"Microsoft JhengHei","微軟正黑體",sans-serif;font-size:12px;font-weight:bold;margin-left:8px;vertical-align:middle;white-space:nowrap;'
+
+  btn.addEventListener('click', function() {
+    btn.disabled = true
+    btn.textContent = '載入中…'
+    var pobCode = extractPobCode()
+    chrome.runtime.sendMessage(
+      { type: 'OPEN_POB', pobCode: pobCode, poeNinjaUrl: window.location.href },
+      function() {
+        btn.disabled = false
+        btn.textContent = '編年史POB'
+      }
+    )
+  })
+
+  container.appendChild(btn)
+  return true
+}
+
+function schedulePobButtonInjection() {
+  if (pobLinkObserver) { pobLinkObserver.disconnect(); pobLinkObserver = null }
+  if (!isCharacterBuildPage()) return
+  if (injectPobButton()) return
+
+  pobLinkObserver = new MutationObserver(function(mutations, obs) {
+    if (injectPobButton()) {
+      obs.disconnect()
+      pobLinkObserver = null
+    }
+  })
+  pobLinkObserver.observe(document.body, { childList: true, subtree: true })
+  setTimeout(function() {
+    if (pobLinkObserver) { pobLinkObserver.disconnect(); pobLinkObserver = null }
+  }, 10000)
+}
+
 // ── 初始化 ────────────────────────────────────────────────
 async function init() {
   var result = await chrome.storage.local.get('language')
   currentLang = result.language || 'en'
   if (currentLang === 'zh-TW') await enableZhTW()
+  schedulePobButtonInjection()
 }
 
 init()

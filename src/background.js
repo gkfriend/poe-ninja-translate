@@ -32,6 +32,29 @@ async function loadTranslationPoe2() {
 
 // 回應 content script 的字庫請求
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.type === 'OPEN_POB') {
+    if (!msg.pobCode) {
+      chrome.tabs.create({ url: 'https://poedb.tw/tw/pob' })
+      sendResponse({})
+      return true
+    }
+    fetch('https://poedb.tw/pob/api/paste', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: msg.pobCode })
+    })
+      .then(r => r.json())
+      .then(result => {
+        const url = (result && result.url) || (result && result.hash && 'https://poedb.tw/tw/pob/' + result.hash)
+        chrome.tabs.create({ url: url || 'https://poedb.tw/tw/pob' })
+        sendResponse({})
+      })
+      .catch(() => {
+        chrome.tabs.create({ url: 'https://poedb.tw/tw/pob' })
+        sendResponse({})
+      })
+    return true
+  }
   if (msg.type === 'GET_TRANSLATION') {
     loadTranslation()
       .then(data => sendResponse({ ok: true, data }))

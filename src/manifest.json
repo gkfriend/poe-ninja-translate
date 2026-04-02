@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "POE Ninja 繁體中文化",
-  "version": "0.9.4",
+  "version": "0.9.26",
   "description": "Translate poe.ninja to Traditional Chinese. Covers items, skills, passives, currency and tooltips. (POE1 + POE2)",
   "permissions": [
     "storage",
     "activeTab"
   ],
   "host_permissions": [
-    "https://poe.ninja/*"
+    "https://poe.ninja/*",
+    "https://poedb.tw/*"
   ],
   "background": {
     "service_worker": "background.js"
